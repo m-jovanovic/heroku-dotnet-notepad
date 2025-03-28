@@ -1,0 +1,409 @@
+﻿@page
+@using NotepadApp.Models
+@namespace NotepadApp.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Real-Time Sticky Notes";
+}
+
+<div class="jumbotron text-center">
+    <div class="container">
+        <a href="/" class="lang-logo">
+            <img src="/lang-logo.png">
+        </a>
+        <h1>Realtime Sticky Notes with SignalR</h1>
+        <p>This sample .NET Razor application is deployed to Heroku. It uses SignalR in .NET, leveraging recent HTTP/2 support on Heroku to optimize network traffic. The architecture can be easily scaled using Heroku Dyno scaling and the Heroku Key-Value Store.</p>
+    </div>
+</div>
+
+<div class="note-container" id="noteContainer">
+    <button class="add-note-btn" onclick="createNewNote()">+</button>
+</div>
+
+@section Styles {
+    <style>
+        /* Navigation styles */
+        .navbar {
+            background-color: #1a1a1a !important;
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: bold;
+        }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255,255,255,.8) !important;
+        }
+
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .navbar-dark .navbar-toggler {
+            border-color: rgba(255,255,255,.1);
+        }
+
+        .navbar-dark .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Jumbotron styles */
+        .jumbotron {
+            background: #532F8C;
+            color: white;
+            padding: 2rem 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .jumbotron .btn-primary {
+            background: #845ac7;
+            border-color: #845ac7;
+        }
+
+        .jumbotron .btn-primary:hover {
+            background: #7646c1;
+        }
+
+        .jumbotron p {
+            color: #d9ccee;
+            max-width: 75%;
+            margin: 1em auto 2em;
+        }
+
+        .navbar + .jumbotron {
+            margin-top: -20px;
+        }
+
+        .jumbotron .lang-logo {
+            display: block;
+            background: #B01302;
+            border-radius: 50%;
+            overflow: hidden;
+            width: 100px;
+            height: 100px;
+            margin: auto;
+            border: 2px solid white;
+        }
+
+        .jumbotron .lang-logo img {
+            max-width: 100%;
+        }
+
+        /* Footer styles */
+        .footer {
+            background-color: #2c3e50;
+            color: rgba(255,255,255,.8);
+            padding: 1rem 0;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        /* Note container styles */
+        .note-container {
+            position: relative;
+            min-height: 100vh;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+
+        .note {
+            position: absolute;
+            width: 250px;
+            min-height: 250px;
+            padding: 15px;
+            margin: 10px;
+            background: #ffd700;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .note:hover {
+            transform: scale(1.02);
+            z-index: 1000;
+        }
+
+        .note-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 5px;
+        }
+
+        .drag-handle {
+            cursor: move;
+            padding: 0 8px;
+            color: rgba(0,0,0,0.3);
+            font-size: 16px;
+            user-select: none;
+        }
+
+        .drag-handle:hover {
+            color: rgba(0,0,0,0.5);
+        }
+
+        .note-title {
+            font-weight: bold;
+            flex-grow: 1;
+            cursor: text;
+            outline: none;
+            user-select: text;
+        }
+
+        .note-title:focus {
+            outline: none;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .note-content {
+            min-height: 150px;
+            outline: none;
+            cursor: text;
+            user-select: text;
+        }
+
+        .note-content:focus {
+            outline: none;
+        }
+
+        .note-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #000;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        .add-note-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+
+        .add-note-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .note.dragging {
+            z-index: 1000;
+            opacity: 0.8;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        let connection;
+        let notes = new Map();
+        let isDragging = false;
+
+        async function initializeSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/noteHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveNote", (note) => {
+                addNoteToUI(note);
+            });
+
+            connection.on("UpdateNote", (note) => {
+                updateNoteInUI(note);
+            });
+
+            connection.on("DeleteNote", (noteId) => {
+                deleteNoteFromUI(noteId);
+            });
+
+            connection.on("MoveNote", (noteId, x, y) => {
+                moveNoteInUI(noteId, x, y);
+            });
+
+            try {
+                await connection.start();
+                console.log("SignalR Connected!");
+            } catch (err) {
+                console.error("SignalR Connection Error: ", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeSignalR);
+
+        function createNewNote() {
+            if (!connection) {
+                console.error("SignalR connection not initialized");
+                return;
+            }
+            const note = {
+                title: "New Note",
+                content: "",
+                color: "#ffd700",
+                positionX: Math.random() * (window.innerWidth - 300),
+                positionY: Math.random() * (window.innerHeight - 300)
+            };
+            connection.invoke("AddNote", note);
+        }
+
+        function addNoteToUI(note) {
+            const noteElement = document.createElement("div");
+            noteElement.className = "note";
+            noteElement.id = note.id;
+            noteElement.style.left = note.positionX + "px";
+            noteElement.style.top = note.positionY + "px";
+            noteElement.style.backgroundColor = note.color;
+            noteElement.innerHTML = `
+                <div class="note-actions">
+                    <button class="close-btn" onclick="deleteNote(${note.id})">×</button>
+                </div>
+                <div class="note-header">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="note-title" contenteditable="true" onblur="updateNoteTitle(${note.id}, this.textContent)">${note.title}</div>
+                </div>
+                <div class="note-content" contenteditable="true" onblur="updateNoteContent(${note.id}, this.textContent)">${note.content}</div>
+            `;
+            makeDraggable(noteElement);
+            document.getElementById("noteContainer").appendChild(noteElement);
+            notes.set(note.id, note);
+        }
+
+        function updateNoteInUI(note) {
+            const noteElement = document.getElementById(note.id);
+            if (noteElement) {
+                noteElement.querySelector(".note-title").textContent = note.title;
+                noteElement.querySelector(".note-content").textContent = note.content;
+                noteElement.style.backgroundColor = note.color;
+                notes.set(note.id, note);
+            }
+        }
+
+        function deleteNoteFromUI(noteId) {
+            const noteElement = document.getElementById(noteId);
+            if (noteElement) {
+                noteElement.remove();
+                notes.delete(noteId);
+            }
+        }
+
+        function moveNoteInUI(noteId, x, y) {
+            const noteElement = document.getElementById(noteId);
+            if (noteElement) {
+                noteElement.style.left = x + "px";
+                noteElement.style.top = y + "px";
+                noteElement.style.transform = "none";
+                
+                const note = notes.get(noteId);
+                if (note) {
+                    note.positionX = x;
+                    note.positionY = y;
+                }
+            }
+        }
+
+        function updateNoteTitle(noteId, title) {
+            const note = notes.get(noteId);
+            if (note) {
+                note.title = title;
+                note.updatedAt = new Date();
+                connection.invoke("UpdateNote", note);
+            }
+        }
+
+        function updateNoteContent(noteId, content) {
+            const note = notes.get(noteId);
+            if (note) {
+                note.content = content;
+                note.updatedAt = new Date();
+                connection.invoke("UpdateNote", note);
+            }
+        }
+
+        function deleteNote(noteId) {
+            connection.invoke("DeleteNote", parseInt(noteId));
+        }
+
+        function makeDraggable(element) {
+            let startX, startY, initialX, initialY;
+            let originalLeft, originalTop;
+
+            const dragHandle = element.querySelector('.drag-handle');
+            dragHandle.onmousedown = dragStart;
+
+            function dragStart(e) {
+                initialX = e.clientX - element.offsetLeft;
+                initialY = e.clientY - element.offsetTop;
+                originalLeft = element.offsetLeft;
+                originalTop = element.offsetTop;
+
+                if (e.target === dragHandle) {
+                    element.classList.add('dragging');
+                    document.onmousemove = drag;
+                    document.onmouseup = dragEnd;
+                }
+            }
+
+            function drag(e) {
+                if (element.classList.contains('dragging')) {
+                    e.preventDefault();
+                    startX = e.clientX - initialX;
+                    startY = e.clientY - initialY;
+
+                    element.style.left = startX + "px";
+                    element.style.top = startY + "px";
+                }
+            }
+
+            function dragEnd(e) {
+                if (element.classList.contains('dragging')) {
+                    element.classList.remove('dragging');
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+
+                    const noteId = parseInt(element.id);
+                    connection.invoke("MoveNote", noteId, startX, startY);
+                }
+            }
+        }
+    </script>
+}

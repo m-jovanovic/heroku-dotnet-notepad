@@ -1,0 +1,142 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background-color: #f8f9fa;
+}
+
+/* Notepad specific styles */
+.note-container {
+  position: relative;
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 20px;
+}
+
+.note {
+  position: absolute;
+  width: 250px;
+  min-height: 250px;
+  padding: 15px;
+  margin: 10px;
+  background: #fff;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+  z-index: 1;
+  transition: transform 0.2s ease-in-out;
+}
+
+.note:hover {
+  transform: scale(1.02);
+  z-index: 1000;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding-bottom: 5px;
+}
+
+.drag-handle {
+  cursor: move;
+  padding: 0 8px;
+  color: rgba(0,0,0,0.3);
+  font-size: 16px;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: rgba(0,0,0,0.5);
+}
+
+.note-title {
+  font-weight: bold;
+  flex-grow: 1;
+  cursor: text;
+  outline: none;
+  user-select: text;
+}
+
+.note-title:focus {
+  outline: none;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.note-content {
+  min-height: 150px;
+  outline: none;
+  cursor: text;
+  user-select: text;
+}
+
+.note-content:focus {
+  outline: none;
+}
+
+.note-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1001;
+}
+
+.note:hover .note-actions {
+  opacity: 1;
+}
+
+.note-actions button {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.note-actions button:hover {
+  opacity: 1;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}

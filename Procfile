@@ -1,0 +1,1 @@
+web: cd NotepadApp/bin/publish/; ./NotepadApp --urls http://*:$PORT 

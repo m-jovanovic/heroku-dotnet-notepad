@@ -1,20 +1,11 @@
 {
-    "name": "Start on Heroku: .NET",
-    "description": "A barebones ASP.NET Core app, which can easily be deployed to Heroku.",
-    "repository": "https://github.com/heroku/dotnet-getting-started",
-    "website": "https://devcenter.heroku.com/articles/getting-started-with-dotnet",
+    "name": "Realtime Sticky Notes with SignalR and Heroku",
+    "description": "This is a real-time, multi-user sticky notes application built with SignalR and deployed on Heroku.",
+    "repository": "https://github.com/heroku-examples/heroku-dotnet-notepad",
     "keywords": [
         "dotnet",
         "blazor",
         "aspnetcore"
-    ],
-    "addons": [
-      {
-        "plan": "heroku-postgresql:essential-0"
-      }, 
-      {
-        "plan": "heroku-redis:mini"
-      }
     ],
     "buildpacks": [
         {

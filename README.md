@@ -1,6 +1,6 @@
 # Realtime Sticky Notes with SignalR and Heroku
 
-This is a real-time, multi-user sticky notes application built with [SignalR](https://dotnet.microsoft.com/en-us/apps/aspnet/signalr) and deployed on Heroku. SignalR enables seamless, bidirectional communication between clients and the server, making it perfect for collaborative experiences. To support horizontal scaling and multiple app instances, the app leverages Redis via the [Heroku Key-Value Store](https://devcenter.heroku.com/articles/heroku-redis) add-on, alongside [Heroku Postgres](https://www.heroku.com/postgres) for persistent data storage. 
+This is a real-time, multi-user sticky notes application built with [SignalR](https://dotnet.microsoft.com/en-us/apps/aspnet/signalr) and deployed on Heroku. SignalR enables seamless, bidirectional communication between clients and the server, making it perfect for collaborative experiences. To support horizontal scaling, the app leverages Redis via the [Heroku Key-Value Store](https://devcenter.heroku.com/articles/heroku-redis) add-on, alongside [Heroku Postgres](https://www.heroku.com/postgres) for persistent data storage. 
 
 This app lets users create, edit, and move sticky notes collaboratively in real time across multiple browsers. Whether you're building collaborative tools or experimenting with SignalR and Heroku, this app serves as a fun and practical example of real-time web development in the .NET ecosystem.
 

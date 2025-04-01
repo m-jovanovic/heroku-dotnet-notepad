@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using NotepadApp.Data;
 using StackExchange.Redis;
 using DotNetEnv;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +43,8 @@ else
 
 // Configure PostgreSQL
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (!string.IsNullOrEmpty(databaseUrl)) {
+if (!string.IsNullOrEmpty(databaseUrl))
+{
 
     // Parse Heroku PostgreSQL URL format: postgres://username:password@host:port/database
     var uri = new Uri(databaseUrl);
@@ -54,7 +56,9 @@ if (!string.IsNullOrEmpty(databaseUrl)) {
     var password = credentials[1];
     var connectionString = $"Host={host};Port={dbPort};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
     builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-} else {
+}
+else
+{
     Console.WriteLine("Warning: DATABASE_URL not found, falling back to SQLite.");
     var fallbackDbPath = Path.Combine(AppContext.BaseDirectory, "local.db");
     var sqliteConnection = $"Data Source={fallbackDbPath}";
@@ -62,15 +66,30 @@ if (!string.IsNullOrEmpty(databaseUrl)) {
 }
 
 builder.Services.AddRazorPages();
-
+var isHeroku = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DYNO"));
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    if (isHeroku)
+    {
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
+});
 builder.Services.AddHttpsRedirection(options =>
 {
-    options.HttpsPort = 7044;
+    if (isHeroku)
+    {
+        options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+        options.HttpsPort = 443;
+    }
+    ;
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -78,29 +97,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Handle Heroku PORT environment variable
-var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
-{
-    app.Urls.Add($"http://+:{port}");
-}
-else
-{
-    // In development, use both HTTP and HTTPS
-    app.Urls.Add("http://localhost:5181");
-    app.Urls.Add("https://localhost:7044");
-    app.UseHttpsRedirection();
-}
-
-// Only force HTTPS in production
-if (!app.Environment.IsDevelopment())
-{
-    app.Use(async (context, next) =>
-    {
-        context.Request.Scheme = "https";
-        await next();
-    });
-}
+app.UseHttpsRedirection();
 
 // Additional middleware
 app.UseStaticFiles();

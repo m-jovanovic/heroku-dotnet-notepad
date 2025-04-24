@@ -4,6 +4,9 @@ using NotepadApp.Data;
 using StackExchange.Redis;
 using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +88,21 @@ builder.Services.AddHttpsRedirection(options =>
     }
     ;
 });
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService("NotepadApp"))
+    .WithTracing(tracing =>
+        tracing
+            .AddSource("NotepadApp")
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddSource("Microsoft.AspNetCore.SignalR.Client")
+            .AddSource("Microsoft.AspNetCore.SignalR.Server")
+            .AddNpgsql()
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri("http://localhost:4317");
+            }));
 
 var app = builder.Build();
 
